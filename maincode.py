@@ -148,10 +148,6 @@ plt.show()
 
 joblib.dump(svm_classifier, 'svm_model.pkl')
 
-def predict_step(model_path, coordinates):
-    loaded_model = joblib.load(model_path)
-    prediction = loaded_model.predict([coordinates])
-    return prediction[0]
 
 def predict_steps(model_path, coordinates_list):
     loaded_model = joblib.load(model_path)
