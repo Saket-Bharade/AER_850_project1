@@ -4,7 +4,7 @@ assert sys.version_info >= (3, 5)
 # Scikit-Learn ≥0.20 is required
 import sklearn
 assert sklearn.__version__ >= "0.20"
-from sklearn.externals import joblib
+import joblib
 # Common imports
 import os
 
@@ -92,8 +92,8 @@ import seaborn as sns
 from sklearn.neighbors import KNeighborsClassifier
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify = y)
-
-
+X_train = pd.DataFrame(X_train, columns=['X', 'Y', 'Z'])
+X_test = pd.DataFrame(X_test, columns=['X', 'Y', 'Z'])
 
 rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
 rf_classifier.fit(X_train, y_train)
@@ -154,9 +154,23 @@ def predict_step(model_path, coordinates):
     prediction = loaded_model.predict([coordinates])
     return prediction[0]
 
-model_path = 'svm_model.pkl'
-coordinates_to_predict = [9.375,3.0625,1.51]
+def predict_steps(model_path, coordinates_list):
+    loaded_model = joblib.load(model_path)
+    predictions = loaded_model.predict(coordinates_list)
+    return predictions
 
-predicted_step = predict_step(model_path, coordinates_to_predict)
-print(f"Predicted Step: {predicted_step}")
+model_path = 'svm_model.pkl'
+coordinates_to_predict = [
+    [9.375, 3.0625, 1.51],
+    [6.995,5.125,0.3875],
+    [0,3.0625,1.93],
+    [9.4,3,1.8],
+    [9.4,3,1.3],
+    # Add more sets of coordinates as needed
+]
+
+predicted_steps = predict_steps(model_path, coordinates_to_predict)
+
+for i, predicted_step in enumerate(predicted_steps):
+    print(f"Predicted Step {i + 1}: {predicted_step}")
 
