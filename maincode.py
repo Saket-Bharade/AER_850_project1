@@ -25,7 +25,7 @@ mpl.rc('xtick', labelsize=12)
 mpl.rc('ytick', labelsize=12)
 
 PROJECT_ROOT_DIR = "."
-CHAPTER_ID = "histogram_plots"
+CHAPTER_ID = "All required plots"
 IMAGES_PATH = os.path.join(PROJECT_ROOT_DIR, "images", CHAPTER_ID)
 os.makedirs(IMAGES_PATH, exist_ok=True)
 
@@ -141,6 +141,7 @@ sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=range(1,
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.title('Confusion Matrix')
+plt.savefig(os.path.join(IMAGES_PATH, "confusion_matrix_plot.png"), format="png", dpi=300)
 plt.show()
 
 #we see that CVM has the best accuracy from the results so we will only use CVM
