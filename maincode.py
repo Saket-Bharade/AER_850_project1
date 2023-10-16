@@ -17,6 +17,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import seaborn as sns
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import GridSearchCV
 
 #making graphs to understand the kind of data we are dealing with
 
@@ -91,14 +92,28 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 X_train = pd.DataFrame(X_train, columns=['X', 'Y', 'Z'])
 X_test = pd.DataFrame(X_test, columns=['X', 'Y', 'Z'])
 
-rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
-rf_classifier.fit(X_train, y_train)
-rf_y_pred = rf_classifier.predict(X_test)
+
+
+rf_param_grid = {
+    'n_estimators': [10, 100, 200],
+    'max_depth': [None, 10, 20, 30],
+}
+
+
+rf_grid_search = GridSearchCV(RandomForestClassifier(random_state=42), rf_param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+rf_grid_search.fit(X_train, y_train)
+
+best_rf_params = rf_grid_search.best_params_
+best_rf_estimator = rf_grid_search.best_estimator_
+best_rf_classifier = RandomForestClassifier(n_estimators=best_rf_params['n_estimators'], max_depth=best_rf_params['max_depth'], random_state=42)
+best_rf_classifier.fit(X_train, y_train)
+rf_y_pred = best_rf_classifier.predict(X_test)
 rf_accuracy = accuracy_score(y_test, rf_y_pred)
 rf_report = classification_report(y_test, rf_y_pred)
+conf_matrix_rf = confusion_matrix(y_test, rf_y_pred)
 
-
-print("Random Forest Classifier:")
+print("Random Forest Classifier with Grid Search:")
+print(f"Best Hyperparameters: {best_rf_params}")
 print(f"Accuracy: {rf_accuracy}")
 print("Classification Report:")
 print(rf_report)
@@ -107,47 +122,69 @@ print(rf_report)
 svmX_train, svmX_test, svmy_train, svmy_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 
-svm_classifier = SVC(kernel='linear', C=1)
-svm_classifier.fit(svmX_train, svmy_train)
-svm_y_pred = svm_classifier.predict(svmX_test)
+# Define the hyperparameter grid for SVM
+svm_param_grid = {
+    'C': [0.1, 1, 10, 100],
+    'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+}
+
+svm_grid_search = GridSearchCV(SVC(random_state=42), svm_param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+
+svm_grid_search.fit(svmX_train, svmy_train)
+best_svm_params = svm_grid_search.best_params_
+best_svm_estimator = svm_grid_search.best_estimator_
+best_svm_classifier = SVC(C=best_svm_params['C'], kernel=best_svm_params['kernel'], random_state=42)
+best_svm_classifier.fit(svmX_train, svmy_train)
+svm_y_pred = best_svm_classifier.predict(svmX_test)
 svm_accuracy = accuracy_score(svmy_test, svm_y_pred)
 svm_report = classification_report(svmy_test, svm_y_pred)
-conf_matrix = confusion_matrix(svmy_test, svm_y_pred)
 
-print("Support Vector Machine (SVM):")
+
+print("Support Vector Machine (SVM) with Grid Search:")
+print(f"Best Hyperparameters: {best_svm_params}")
 print(f"Accuracy: {svm_accuracy}")
 print("Classification Report:")
 print(svm_report)
 
 
+knn_param_grid = {
+    'n_neighbors': [3, 5, 7, 9],
+    'weights': ['uniform', 'distance'],
+}
 
-knn_classifier = KNeighborsClassifier(n_neighbors=5)  
-knn_classifier.fit(X_train, y_train)
-knn_y_pred = knn_classifier.predict(X_test)
+
+knn_grid_search = GridSearchCV(KNeighborsClassifier(), knn_param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+knn_grid_search.fit(X_train, y_train)
+best_knn_params = knn_grid_search.best_params_
+best_knn_estimator = knn_grid_search.best_estimator_
+best_knn_classifier = KNeighborsClassifier(n_neighbors=best_knn_params['n_neighbors'], weights=best_knn_params['weights'])
+best_knn_classifier.fit(X_train, y_train)
+knn_y_pred = best_knn_classifier.predict(X_test)
 knn_accuracy = accuracy_score(y_test, knn_y_pred)
 knn_report = classification_report(y_test, knn_y_pred)
 
-
-print("K-Nearest Neighbors (K-NN):")
+print("K-Nearest Neighbors (K-NN) with Grid Search:")
+print(f"Best Hyperparameters: {best_knn_params}")
 print(f"Accuracy: {knn_accuracy}")
 print("Classification Report:")
 print(knn_report)
 
 
+
 print("Confusion Matrix:")
-print(conf_matrix)
+print(conf_matrix_rf)
 plt.figure(figsize=(8, 6))
-sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=range(1, 14), yticklabels=range(1, 14))
+sns.heatmap(conf_matrix_rf, annot=True, fmt='d', cmap='Blues', xticklabels=range(1, 14), yticklabels=range(1, 14))
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.title('Confusion Matrix')
 plt.savefig(os.path.join(IMAGES_PATH, "confusion_matrix_plot.png"), format="png", dpi=300)
 plt.show()
 
-#we see that CVM has the best accuracy from the results so we will only use CVM
+#we see that RF has the best accuracy from the results so we will only use CVM
 
 
-joblib.dump(svm_classifier, 'svm_model.pkl')
+joblib.dump(best_rf_classifier, 'best_rf_model.pkl')
 
 
 def predict_steps(model_path, coordinates_list):
@@ -155,7 +192,7 @@ def predict_steps(model_path, coordinates_list):
     predictions = loaded_model.predict(coordinates_list)
     return predictions
 
-model_path = 'svm_model.pkl'
+model_path = 'best_rf_model.pkl'
 coordinates_to_predict = [
     [9.375, 3.0625, 1.51],
     [6.995,5.125,0.3875],
