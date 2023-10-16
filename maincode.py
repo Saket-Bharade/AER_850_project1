@@ -82,22 +82,63 @@ save_fig("Z_vs_Step")
 X = rawdata[['X', 'Y', 'Z']]
 y = rawdata['Step']
 
+
+
+
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import seaborn as sns
+from sklearn.neighbors import KNeighborsClassifier
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify = y)
+
+
+
 rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
 rf_classifier.fit(X_train, y_train)
-y_pred = rf_classifier.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
-report = classification_report(y_test, y_pred)
-conf_matrix = confusion_matrix(y_test, y_pred)
+rf_y_pred = rf_classifier.predict(X_test)
+rf_accuracy = accuracy_score(y_test, rf_y_pred)
+rf_report = classification_report(y_test, rf_y_pred)
 
-print(f"Accuracy: {accuracy}")
+
+print("Random Forest Classifier:")
+print(f"Accuracy: {rf_accuracy}")
 print("Classification Report:")
-print(report)
+print(rf_report)
+
+
+svmX_train, svmX_test, svmy_train, svmy_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+
+svm_classifier = SVC(kernel='linear', C=1)
+svm_classifier.fit(svmX_train, svmy_train)
+svm_y_pred = svm_classifier.predict(svmX_test)
+svm_accuracy = accuracy_score(svmy_test, svm_y_pred)
+svm_report = classification_report(svmy_test, svm_y_pred)
+conf_matrix = confusion_matrix(svmy_test, svm_y_pred)
+
+print("Support Vector Machine (SVM):")
+print(f"Accuracy: {svm_accuracy}")
+print("Classification Report:")
+print(svm_report)
+
+
+
+knn_classifier = KNeighborsClassifier(n_neighbors=5)  
+knn_classifier.fit(X_train, y_train)
+knn_y_pred = knn_classifier.predict(X_test)
+knn_accuracy = accuracy_score(y_test, knn_y_pred)
+knn_report = classification_report(y_test, knn_y_pred)
+
+
+print("K-Nearest Neighbors (K-NN):")
+print(f"Accuracy: {knn_accuracy}")
+print("Classification Report:")
+print(knn_report)
+
+
 print("Confusion Matrix:")
 print(conf_matrix)
 plt.figure(figsize=(8, 6))
