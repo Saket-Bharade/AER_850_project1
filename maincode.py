@@ -4,9 +4,8 @@ assert sys.version_info >= (3, 5)
 # Scikit-Learn ≥0.20 is required
 import sklearn
 assert sklearn.__version__ >= "0.20"
-
+from sklearn.externals import joblib
 # Common imports
-import numpy as np
 import os
 
 # To plot pretty figures
@@ -148,6 +147,16 @@ plt.ylabel('Actual')
 plt.title('Confusion Matrix')
 plt.show()
 
+joblib.dump(svm_classifier, 'svm_model.pkl')
 
+def predict_step(model_path, coordinates):
+    loaded_model = joblib.load(model_path)
+    prediction = loaded_model.predict([coordinates])
+    return prediction[0]
 
+model_path = 'svm_model.pkl'
+coordinates_to_predict = [9.375,3.0625,1.51]
+
+predicted_step = predict_step(model_path, coordinates_to_predict)
+print(f"Predicted Step: {predicted_step}")
 
